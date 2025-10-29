@@ -1,7 +1,21 @@
 <div class="p-4">
-  <h2 class="text-2xl">Dashboard</h2>
+  <div class="header">
+    <h2 class="text-2xl">Dashboard</h2>
+    <button matButton="tonal" [mat-menu-trigger-for]="widgetMenu">Add widget</button>
+  </div>
+
+  <mat-menu #widgetMenu="matMenu">
+    @for(w of store.widgetsToAdd(); track w.id) {
+    <button mat-menu-item (click)="store.addWidget(w)">
+      {{ w.title }}
+    </button>
+    } @empty {
+    <button mat-menu-item>No widgets to add</button>
+    }
+  </mat-menu>
+
   <div class="dashboard-widgets">
-    @for(w of store.widgets(); track w.id) {
+    @for(w of store.addedWidgets(); track w.id) {
     <app-dashboard-widget [data]="w" />
     }
   </div>

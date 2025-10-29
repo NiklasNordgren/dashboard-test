@@ -1,4 +1,12 @@
 <div class="container rounded-lg bg-white border-1">
   <h3 class="text-lg font-semibold">{{ data().title }}</h3>
+  <button class="settings-button" matButton="tonal" (click)="showOptions.set(true)">
+    Settings
+  </button>
   <ng-container [ngComponentOutlet]="data().content"></ng-container>
+
+  @if(showOptions()) {
+  <app-dashboard-widget-options [(showOptions)]="showOptions" [data]="data()">
+  </app-dashboard-widget-options>
+  }
 </div>
