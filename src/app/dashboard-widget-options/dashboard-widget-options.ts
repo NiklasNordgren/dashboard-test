@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-dashboard-widget-options',
-  imports: [MatButton, MatButtonToggleModule, MatIconButton, MatIconModule],
+  imports: [MatButtonToggleModule, MatIconButton, MatIconModule],
   templateUrl: './dashboard-widget-options.html',
   styleUrl: './dashboard-widget-options.scss',
 })
@@ -16,4 +16,9 @@ export class DashboardWidgetOptions {
   data = input.required<DashboardWidget>();
   showOptions = model<boolean>(false);
   store = inject(DashboardSerivce);
+
+  get columnsRange(): number[] {
+    const cols = Math.max(1, this.store.columns());
+    return Array.from({ length: cols }, (_, i) => i + 1);
+  }
 }

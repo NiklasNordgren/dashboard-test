@@ -13,10 +13,17 @@
     [value]="data().cols ?? 1"
     (change)="store.updateWidget(data().id, { cols: $event.value })"
   >
+    <!--
     <mat-button-toggle value="1">1</mat-button-toggle>
     <mat-button-toggle value="2">2</mat-button-toggle>
     <mat-button-toggle value="3">3</mat-button-toggle>
     <mat-button-toggle value="4">4</mat-button-toggle>
+    <mat-button-toggle [value]="columnsRange.length">Full</mat-button-toggle>
+    -->
+
+    @for(c of columnsRange; track c) {
+    <mat-button-toggle [value]="c">{{ c }}</mat-button-toggle>
+    }
   </mat-button-toggle-group>
 
   Height

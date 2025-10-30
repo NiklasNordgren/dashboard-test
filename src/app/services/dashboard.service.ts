@@ -11,6 +11,8 @@ import { Analytics } from '../analytics/analytics';
   providedIn: 'root',
 })
 export class DashboardSerivce {
+  columns = signal<number>(1);
+
   widgets = signal<DashboardWidget[]>([
     {
       id: 1,
@@ -25,11 +27,13 @@ export class DashboardSerivce {
       id: 2,
       title: 'Another DashboardWidget',
       content: Views,
+      backgroundColor: 'gray',
     },
     {
       id: 3,
       title: 'Sample DashboardWidget',
       content: Subscribers,
+      backgroundColor: 'gray',
       rows: 2,
       cols: 2,
     },
@@ -44,6 +48,7 @@ export class DashboardSerivce {
       id: 5,
       title: 'Watch Time',
       content: WatchTime,
+      backgroundColor: 'gray',
       rows: 2,
       cols: 2,
     },
