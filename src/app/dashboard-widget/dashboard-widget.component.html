@@ -1,8 +1,19 @@
-<div class="container rounded-lg bg-white border-1">
+<!-- important containing div that has all dashboard widget content for animate css grid etc.-->
+<div
+  class="container rounded-lg bg-white border-1"
+  [style.background-color]="data().backgroundColor ?? 'white'"
+  [style.color]="data().color ?? 'inherit'"
+>
   <h3 class="text-lg font-semibold">{{ data().title }}</h3>
-  <button class="settings-button" matButton="tonal" (click)="showOptions.set(true)">
-    Settings
+  <button
+    class="settings-button"
+    mat-icon-button
+    (click)="showOptions.set(true)"
+    [style.--mdc-icon-button-icon-color]="data().color ?? 'inherit'"
+  >
+    <mat-icon>settings</mat-icon>
   </button>
+
   <ng-container [ngComponentOutlet]="data().content"></ng-container>
 
   @if(showOptions()) {

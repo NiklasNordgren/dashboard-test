@@ -1,5 +1,9 @@
-<button class="close-button" matButton="tonal" (click)="showOptions.set(false)">
-  close settings
+<button class="remove-widget-button" mat-icon-button (click)="store.removeWidget(data().id)">
+  <mat-icon>delete</mat-icon>
+</button>
+
+<button class="close-button" mat-icon-button (click)="showOptions.set(false)">
+  <mat-icon>close</mat-icon>
 </button>
 
 <div>

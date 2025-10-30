@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { MatIcon } from "@angular/material/icon";
 
 @Component({
-  selector: 'app-views',
+  selector: 'app-revenue',
   imports: [MatIcon],
-  templateUrl: './views.html',
-  styleUrl: './views.scss',
+  templateUrl: './revenue.html',
+  styleUrl: './revenue.scss',
 })
-export class Views {
+export class Revenue {
 
 }
