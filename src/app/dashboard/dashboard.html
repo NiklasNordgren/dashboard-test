@@ -14,9 +14,13 @@
     }
   </mat-menu>
 
-  <div #dashboard class="dashboard-widgets">
+  <div #dashboard class="dashboard-widgets" pDroppable="widgets" (onDrop)="onDrop($event)">
     @for(w of store.addedWidgets(); track w.id) {
-    <app-dashboard-widget [data]="w" />
+    <app-dashboard-widget 
+      [data]="w"
+      (onDragStart)="onDragStart($event)"
+      (onDragEnd)="onDragEnd($event)"
+    />
     }
   </div>
 </div>

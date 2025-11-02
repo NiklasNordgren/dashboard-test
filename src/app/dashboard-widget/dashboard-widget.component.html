@@ -3,16 +3,23 @@
   class="container rounded-lg bg-white border-1"
   [style.background-color]="data().backgroundColor ?? 'white'"
   [style.color]="data().color ?? 'inherit'"
+  [attr.data-widget-id]="data().id"
+  pDraggable="widgets"
+
+  (onDragStart)="onDragStart.emit($event)"
+  (onDragEnd)="onDragEnd.emit($event)"
 >
-  <h3 class="text-lg font-semibold">{{ data().title }}</h3>
-  <button
-    class="settings-button"
-    mat-icon-button
-    (click)="showOptions.set(true)"
-    [style.--mdc-icon-button-icon-color]="data().color ?? 'inherit'"
-  >
-    <mat-icon>settings</mat-icon>
-  </button>
+  <div class="widget-header">
+    <h3 class="text-lg font-semibold">{{ data().title }}</h3>
+    <button
+      class="settings-button"
+      mat-icon-button
+      (click)="showOptions.set(true)"
+      [style.--mdc-icon-button-icon-color]="data().color ?? 'inherit'"
+    >
+      <mat-icon>settings</mat-icon>
+    </button>
+  </div>
 
   <ng-container [ngComponentOutlet]="data().content"></ng-container>
 

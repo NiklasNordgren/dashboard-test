@@ -4,10 +4,12 @@ import { DashboardSerivce } from '../services/dashboard.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { wrapGrid } from 'animate-css-grid';
+import { DragDropModule } from 'primeng/dragdrop';
+import { DashboardWidget } from '../models/dashboard-widget';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DashboardWidgetComponent, MatButtonModule, MatMenuModule],
+  imports: [DashboardWidgetComponent, MatButtonModule, MatMenuModule, DragDropModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -90,6 +92,38 @@ export class Dashboard implements OnDestroy {
     this.computeColumnsFunc();
     this.resizeObserver = new ResizeObserver(() => debouncedCompute());
     this.resizeObserver.observe(el);
+  }
+
+  private draggedWidget?: DashboardWidget;
+
+  onDragStart(event: any) {
+    const widgetElement = event.target.closest('[data-widget-id]');
+    if (!widgetElement) return;
+    
+    const widgetId = parseInt(widgetElement.dataset.widgetId);
+    this.draggedWidget = this.store.addedWidgets().find(w => w.id === widgetId);
+  }
+
+  onDragEnd(event: any) {
+    this.draggedWidget = undefined;
+  }
+
+  onDrop(event: any) {
+    if (!this.draggedWidget) return;
+    
+    const dropElement = event.target.closest('[data-widget-id]');
+    if (!dropElement) return;
+    
+    const dropId = parseInt(dropElement.dataset.widgetId);
+    const dropIndex = this.store.addedWidgets().findIndex(w => w.id === dropId);
+    const dragIndex = this.store.addedWidgets().findIndex(w => w.id === this.draggedWidget?.id);
+    
+    if (dragIndex !== -1 && dropIndex !== -1 && dragIndex !== dropIndex) {
+      const widgets = [...this.store.addedWidgets()];
+      const [removed] = widgets.splice(dragIndex, 1);
+      widgets.splice(dropIndex, 0, removed);
+      this.store.addedWidgets.set(widgets);
+    }
   }
 
   ngOnDestroy(): void {
