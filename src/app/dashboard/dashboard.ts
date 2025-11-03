@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, viewChild, OnDestroy, effect } from '@angular/core';
+import { Component, ElementRef, inject, viewChild, OnDestroy, effect, signal } from '@angular/core';
 import { DashboardWidgetComponent } from '../dashboard-widget/dashboard-widget.component';
 import { DashboardSerivce } from '../services/dashboard.service';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,108 +16,56 @@ import { DashboardWidget } from '../models/dashboard-widget';
 export class Dashboard implements OnDestroy {
   store = inject(DashboardSerivce);
   dashboard = viewChild.required<ElementRef>('dashboard');
-  private resizeObserver?: ResizeObserver;
-  private resizeTimeout?: number;
-  private computeTimeout?: number;
-  private computeColumnsFunc?: () => void;
 
   private gridAnimation?: ReturnType<typeof wrapGrid>;
-
-  constructor() {
-    // Re-compute columns whenever widgets are updated, but with a shorter delay
-    effect(() => {
-      // Access addedWidgets to subscribe to changes
-
-      this.store.addedWidgets();
-      // Use a very short timeout to let animate-css-grid initialize its mutation observer
-      if (this.computeTimeout) {
-        clearTimeout(this.computeTimeout);
-      }
-      this.computeTimeout = setTimeout(() => this.computeColumnsFunc?.(), 250) as unknown as number;
-    });
-  }
+  private resizeObserver?: ResizeObserver;
 
   ngOnInit() {
     this.gridAnimation = wrapGrid(this.dashboard().nativeElement, {
       duration: 300,
     });
 
-    // Compute how many columns fit in the container based on the min column width
-    // Read the CSS variable --min-col-width from the element so JS and CSS agree.
-    const el = this.dashboard().nativeElement as HTMLElement;
-    const parsePx = (v: string, fallback = 200) => {
-      if (!v) return fallback;
-      const m = v.trim().match(/^([0-9\.]+)px$/);
-      return m ? Math.round(Number(m[1])) : fallback;
-    };
+    // Set up resize observer for dynamic column calculation
+    this.resizeObserver = new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+      const minColWidth = 200; // Minimum width for each column
+      const maxCols = 8; // Maximum number of columns
+      const calculatedCols = Math.min(Math.floor(width / minColWidth), maxCols);
+      this.store.columns.set(Math.max(1, calculatedCols));
+    });
 
-    this.computeColumnsFunc = () => {
-      const styles = getComputedStyle(el);
-      const minColWidth = 200;
-      const gap =
-        parsePx(styles.getPropertyValue('gap')) ||
-        parsePx(styles.getPropertyValue('column-gap')) ||
-        0;
-
-      // Account for container padding since grid tracks are laid out inside the
-      // inner content area. clientWidth includes padding, so subtract left/right
-      // padding to get the space available for grid tracks.
-      const padLeft = parsePx(styles.getPropertyValue('padding-left')) || 0;
-      const padRight = parsePx(styles.getPropertyValue('padding-right')) || 0;
-      const availableWidth = Math.max(
-        0,
-        (el.clientWidth || el.getBoundingClientRect().width) - padLeft - padRight
-      );
-
-      // For N columns we need: N*min + (N-1)*gap <= availableWidth
-      // => N <= (availableWidth + gap) / (min + gap)
-      // We calculate the maximum possible columns that could fit
-      const maxCols = Math.max(1, Math.floor((availableWidth + gap) / (minColWidth + gap)));
-
-      // Update both the service signal and the CSS variable
-      // We use maxCols as both the maximum and actual column count
-      // This ensures when a widget requests maxCols, it gets full width
-      this.store.columns.set(maxCols);
-    };
-
-    const debouncedCompute = () => {
-      if (this.resizeTimeout) {
-        clearTimeout(this.resizeTimeout);
-      }
-      // Use a short timeout for resize to avoid jerky animations
-      this.resizeTimeout = setTimeout(() => this.computeColumnsFunc?.(), 100) as unknown as number;
-    };
-
-    // Initial compute and observe resizes
-    this.computeColumnsFunc();
-    this.resizeObserver = new ResizeObserver(() => debouncedCompute());
-    this.resizeObserver.observe(el);
+    this.resizeObserver.observe(this.dashboard().nativeElement);
   }
 
   private draggedWidget?: DashboardWidget;
+  isDragging = signal(false);
 
   onDragStart(event: any) {
     const widgetElement = event.target.closest('[data-widget-id]');
     if (!widgetElement) return;
-    
+
     const widgetId = parseInt(widgetElement.dataset.widgetId);
-    this.draggedWidget = this.store.addedWidgets().find(w => w.id === widgetId);
+    this.draggedWidget = this.store.addedWidgets().find((w) => w.id === widgetId);
+    this.isDragging.set(true);
   }
 
   onDragEnd(event: any) {
     this.draggedWidget = undefined;
+    this.isDragging.set(false);
   }
 
   onDrop(event: any) {
     if (!this.draggedWidget) return;
-    
+
     const dropElement = event.target.closest('[data-widget-id]');
     if (!dropElement) return;
-    
-    const dropId = parseInt(dropElement.dataset.widgetId);
-    const dropIndex = this.store.addedWidgets().findIndex(w => w.id === dropId);
-    const dragIndex = this.store.addedWidgets().findIndex(w => w.id === this.draggedWidget?.id);
-    
+
+    const dropId = dropElement.dataset.widgetId;
+    if (dropId === 'dummy') return; // Let onDropFullWidth handle this
+
+    const dropIndex = this.store.addedWidgets().findIndex((w) => w.id === parseInt(dropId));
+    const dragIndex = this.store.addedWidgets().findIndex((w) => w.id === this.draggedWidget?.id);
+
     if (dragIndex !== -1 && dropIndex !== -1 && dragIndex !== dropIndex) {
       const widgets = [...this.store.addedWidgets()];
       const [removed] = widgets.splice(dragIndex, 1);
@@ -126,14 +74,28 @@ export class Dashboard implements OnDestroy {
     }
   }
 
+  onDropFullWidth(event: any) {
+    if (!this.draggedWidget) return;
+
+    const dragIndex = this.store.addedWidgets().findIndex((w) => w.id === this.draggedWidget?.id);
+    if (dragIndex === -1) return;
+
+    // Create a new widget array with the dragged widget at the end and set to full width
+    const widgets = [...this.store.addedWidgets()];
+    const [removed] = widgets.splice(dragIndex, 1);
+    this.store.removeWidget(removed.id);
+
+    // Create a new widget object to trigger reactivity
+    const updatedWidget = {
+      ...removed,
+      cols: this.store.columns(), // Set to current column count for full width
+    };
+
+    this.store.addWidget(updatedWidget);
+  }
+
   ngOnDestroy(): void {
-    this.resizeObserver?.disconnect();
-    if (this.resizeTimeout) {
-      clearTimeout(this.resizeTimeout);
-    }
-    if (this.computeTimeout) {
-      clearTimeout(this.computeTimeout);
-    }
     this.gridAnimation?.unwrapGrid();
+    this.resizeObserver?.disconnect();
   }
 }

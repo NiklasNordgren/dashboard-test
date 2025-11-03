@@ -1,8 +1,33 @@
 .dashboard-widgets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(var(--grid-cols, 8), 1fr);
   grid-auto-rows: 150px;
   gap: 16px;
+  width: 100%;
+
+  .dummy-widget {
+    grid-column: 1 / -1;
+    height: 150px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      border-color: #999;
+    }
+
+    .dummy-content {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1em;
+      color: #666;
+    }
+  }
 }
 
 .header {

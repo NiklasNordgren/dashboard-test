@@ -1,11 +1,10 @@
 <!-- important containing div that has all dashboard widget content for animate css grid etc.-->
 <div
-  class="container rounded-lg bg-white border-1"
+  class="dashboard-widget-container rounded-lg bg-white border-1"
   [style.background-color]="data().backgroundColor ?? 'white'"
   [style.color]="data().color ?? 'inherit'"
   [attr.data-widget-id]="data().id"
   pDraggable="widgets"
-
   (onDragStart)="onDragStart.emit($event)"
   (onDragEnd)="onDragEnd.emit($event)"
 >

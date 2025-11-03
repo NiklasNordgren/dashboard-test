@@ -14,13 +14,27 @@
     }
   </mat-menu>
 
-  <div #dashboard class="dashboard-widgets" pDroppable="widgets" (onDrop)="onDrop($event)">
+  <div #dashboard class="dashboard-widgets" pDroppable="widgets" (onDrop)="onDrop($event)"
+       [style.--grid-cols]="store.columns()">
     @for(w of store.addedWidgets(); track w.id) {
     <app-dashboard-widget 
       [data]="w"
       (onDragStart)="onDragStart($event)"
       (onDragEnd)="onDragEnd($event)"
     />
+    }
+    <!-- Dummy widget for full-width drop target -->
+    @if (isDragging()) {
+    <div 
+      class="dummy-widget" 
+      [attr.data-widget-id]="'dummy'"
+      pDroppable="widgets"
+      (onDrop)="onDropFullWidth($event)"
+    >
+      <div class="dummy-content">
+        Drop here for full width
+      </div>
+    </div>
     }
   </div>
 </div>
